@@ -1,0 +1,2308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人生重开模拟器 - Life Restart AI</title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'in': 'in 0.3s ease-out',
+                        'fade-in': 'fadeIn 0.4s ease-out',
+                        'slide-in-from-bottom-4': 'slideFromBottom4 0.5s ease-out',
+                        'slide-in-from-bottom-8': 'slideFromBottom8 0.5s ease-out',
+                        'slide-in-from-left-4': 'slideFromLeft4 0.3s ease-out',
+                        'zoom-in-95': 'zoomIn95 0.2s ease-out',
+                        'slide-in-from-top-2': 'slideFromTop2 0.3s ease-out',
+                        'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce': 'bounce 1s infinite',
+                        'spin': 'spin 1s linear infinite',
+                    },
+                    keyframes: {
+                        in: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideFromBottom4: { '0%': { opacity: '0', transform: 'translateY(1rem)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        slideFromBottom8: { '0%': { opacity: '0', transform: 'translateY(2rem)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        slideFromLeft4: { '0%': { opacity: '0', transform: 'translateX(-1rem)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' } },
+                        zoomIn95: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1',
+                            transform: 'scale(1)' } },
+                        slideFromTop2: { '0%': { opacity: '0', transform: 'translateY(-0.5rem)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' } },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .animate-in {
+            animation: in 0.3s ease-out;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        .slide-in-from-bottom-4 {
+            animation: slideFromBottom4 0.5s ease-out;
+        }
+        .slide-in-from-bottom-8 {
+            animation: slideFromBottom8 0.5s ease-out;
+        }
+        .slide-in-from-left-4 {
+            animation: slideFromLeft4 0.3s ease-out;
+        }
+        .zoom-in-95 {
+            animation: zoomIn95 0.2s ease-out;
+        }
+        .slide-in-from-top-2 {
+            animation: slideFromTop2 0.3s ease-out;
+        }
+        @keyframes in {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+        @keyframes slideFromBottom4 {
+            0% {
+                opacity: 0;
+                transform: translateY(1rem);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes slideFromBottom8 {
+            0% {
+                opacity: 0;
+                transform: translateY(2rem);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes slideFromLeft4 {
+            0% {
+                opacity: 0;
+                transform: translateX(-1rem);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes zoomIn95 {
+            0% {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        @keyframes slideFromTop2 {
+            0% {
+                opacity: 0;
+                transform: translateY(-0.5rem);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a4a6a;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6a6a8a;
+        }
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="module">
+        import React, { useState, useEffect, useRef, useCallback } from 'https://esm.sh/react@18';
+        import { createRoot } from 'https://esm.sh/react-dom@18/client';
+
+        // ==========================================
+        // SVG图标组件（替代lucide-react）
+        // ==========================================
+        const Icon = {
+            Heart: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>' } }),
+            Brain: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M19.967 17.484A4 4 0 0 1 18 18"/>' } }),
+            Coins: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="M16.71 13.88a5.99 5.99 0 0 0-2.84-2.84"/>' } }),
+            Sparkles: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/>' } }),
+            Smile: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/>' } }),
+            Play: ({ size = 16, className = '', fill = 'none' }) => React.createElement('svg', { width: size,
+                height: size, viewBox: '0 0 24 24', fill: fill === 'currentColor' ? 'currentColor' : 'none',
+                stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round',
+                className, dangerouslySetInnerHTML: { __html: '<polygon points="5 3 19 12 5 21 5 3"/>' } }),
+            RotateCcw: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>' } }),
+            Skull: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M8 20v2h8v-2"/><path d="M12.5 17l-.5-1-.5 1h1z"/><path d="M16 20a2 2 0 1 0 1.56-3.3c-.33-.08-.56-.39-.56-.74V14"/><path d="M8 20a2 2 0 1 1-1.56-3.3c.33-.08.56-.39.56-.74V14"/><path d="M12 2a10 10 0 1 0 10 10H2A10 10 0 0 0 12 2z"/>' } }),
+            Pause: ({ size = 16, className = '', fill = 'none' }) => React.createElement('svg', { width: size,
+                height: size, viewBox: '0 0 24 24', fill: fill === 'currentColor' ? 'currentColor' : 'none',
+                stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round',
+                className, dangerouslySetInnerHTML: { __html: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>' } }),
+            AlertCircle: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' } }),
+            Dices: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<rect width="12" height="12" x="2" y="2" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/><path d="M12 12h.01"/>' } }),
+            Star: ({ size = 16, className = '', fill = 'none' }) => React.createElement('svg', { width: size,
+                height: size, viewBox: '0 0 24 24', fill: fill === 'currentColor' ? 'currentColor' : 'none',
+                stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round',
+                className,
+                dangerouslySetInnerHTML: { __html: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' } }),
+            Check: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 3,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<polyline points="20 6 9 17 4 12"/>' } }),
+            ChevronRight: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<polyline points="9 18 15 12 9 6"/>' } }),
+            PenTool: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.586 7.586"/><circle cx="11" cy="11" r="2"/>' } }),
+            Award: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>' } }),
+            ScrollText: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>' } }),
+            Settings: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>' } }),
+            X: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>' } }),
+            Save: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>' } }),
+            StopCircle: ({ size = 16, className = '' }) => React.createElement('svg', { width: size, height: size,
+                viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2,
+                strokeLinecap: 'round', strokeLinejoin: 'round', className,
+                dangerouslySetInnerHTML: { __html: '<circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6" rx="1"/>' } }),
+        };
+
+        // ==========================================
+        // 1. 常量与存储工具
+        // ==========================================
+        const STORAGE_KEYS = {
+            SAVE: 'life_restart_save_v2',
+            API_CONFIG: 'life_restart_api_config_v2',
+            AVAILABLE_MODELS: 'life_restart_available_models_v2',
+            PAST_RECORDS: 'life_restart_past_records',
+        };
+
+        const saveToStorage = (key, data) => {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+                return true;
+            } catch (e) {
+                console.warn('存储失败:', e.message);
+                return false;
+            }
+        };
+
+        const loadFromStorage = (key) => {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch (e) {
+                console.warn('读取存储失败:', e.message);
+                localStorage.removeItem(key);
+                return null;
+            }
+        };
+
+        const clearStorage = (key) => {
+            try {
+                localStorage.removeItem(key);
+            } catch (e) { /* ignore */ }
+        };
+
+        const clearAllSaves = () => {
+            Object.values(STORAGE_KEYS).forEach(k => clearStorage(k));
+        };
+
+        // ==========================================
+        // 2. API通信与推演逻辑
+        // ==========================================
+        const defaultApiKey = "";
+
+        /**
+         * 检测API类型
+         */
+        const detectApiType = (url) => {
+            if (!url) return 'openai';
+            const lower = url.toLowerCase();
+            if (lower.includes('generativelanguage.googleapis.com') || lower.includes('gemini')) {
+                return 'gemini';
+            }
+            return 'openai';
+        };
+
+        /**
+         * 带智能重试的fetch
+         */
+        async function fetchWithRetry(url, options, retries = 5) {
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            let lastError;
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        // 401/403/400 不重试
+                        if (response.status === 401 || response.status === 403 || response.status === 400) {
+                            const errorData = await response.json().catch(() => ({}));
+                            const msg = errorData?.error?.message || errorData?.message || `HTTP ${response.status}`;
+                            throw new Error(msg + ' (请检查API Key和设置)');
+                        }
+                        // 429和5xx重试
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData?.error?.message || errorData?.message ||
+                            `HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    lastError = error;
+                    // 如果是认证/权限错误，不重试
+                    if (error.message.includes('请检查API Key')) throw error;
+                    console.warn(`请求尝试 ${i + 1} 失败:`, error.message);
+                    if (i < retries - 1) await new Promise(res => setTimeout(res, delays[i]));
+                }
+            }
+            throw lastError;
+        }
+
+        /**
+         * 将Gemini风格的schema转换为文本描述（用于OpenAI格式）
+         */
+        const schemaToText = (schema, indent = 0) => {
+            if (!schema) return '';
+            const pad = '  '.repeat(indent);
+            let text = '';
+            if (schema.type === 'OBJECT' && schema.properties) {
+                text += '{\n';
+                const reqSet = new Set(schema.required || []);
+                for (const [key, prop] of Object.entries(schema.properties)) {
+                    const isReq = reqSet.has(key);
+                    text += `${pad}  "${key}": `;
+                    if (prop.type === 'STRING') {
+                        if (prop.enum) {
+                            text += `"${prop.enum.join('" | "')}"`;
+                        } else {
+                            text += 'string';
+                        }
+                    } else if (prop.type === 'INTEGER') {
+                        text += 'integer';
+                    } else if (prop.type === 'BOOLEAN') {
+                        text += 'boolean';
+                    } else if (prop.type === 'ARRAY') {
+                        text += '[\n';
+                        if (prop.items) {
+                            text += schemaToText(prop.items, indent + 2);
+                        }
+                        text += `${pad}  ]`;
+                    } else if (prop.type === 'OBJECT') {
+                        text += schemaToText(prop, indent + 1);
+                    } else {
+                        text += prop.type || 'any';
+                    }
+                    if (!isReq) text += ' (可选)';
+                    text += ',\n';
+                }
+                text += `${pad}}`;
+            } else if (schema.type === 'ARRAY' && schema.items) {
+                text += '[\n';
+                text += schemaToText(schema.items, indent + 1);
+                text += `\n${pad}]`;
+            }
+            return text;
+        };
+
+        /**
+         * 通用AI调用函数 - 同时支持Gemini和OpenAI格式
+         */
+        const callAI = async (promptText, systemInstruction, schema, apiConfig) => {
+            const keyToUse = apiConfig?.key || defaultApiKey;
+            const baseUrl = (apiConfig?.url || "https://generativelanguage.googleapis.com").replace(/\/$/, "");
+            const apiType = apiConfig?.apiType || detectApiType(baseUrl);
+
+            if (apiType === 'gemini') {
+                // Gemini格式
+                const modelPath = apiConfig?.model?.startsWith("models/") ? apiConfig.model :
+                    `models/${apiConfig?.model || 'gemini-2.5-flash-preview-09-2025'}`;
+                const url =
+                    `${baseUrl}/v1beta/${modelPath}:generateContent?key=${encodeURIComponent(keyToUse)}`;
+                const payload = {
+                    contents: [{ parts: [{ text: promptText }] }],
+                    systemInstruction: { parts: [{ text: systemInstruction }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: schema
+                    }
+                };
+                const data = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!text) throw new Error("AI未能生成有效的内容");
+                return JSON.parse(text);
+            } else {
+                // OpenAI兼容格式
+                const apiPath = baseUrl.endsWith('/v1') ? '/chat/completions' : '/v1/chat/completions';
+                const url = `${baseUrl}${apiPath}`;
+
+                // 将schema描述嵌入system instruction
+                let enhancedSystem = systemInstruction;
+                if (schema) {
+                    const schemaDesc = schemaToText(schema);
+                    enhancedSystem +=
+                        `\n\n【重要】你必须严格按照以下JSON格式返回响应，不要包含任何其他文字，只返回纯JSON：\n${schemaDesc}\n请确保返回的是有效的、可被JSON.parse解析的JSON对象。`;
+                } else {
+                    enhancedSystem += '\n\n【重要】请以JSON格式返回响应。';
+                }
+
+                const messages = [
+                    { role: 'system', content: enhancedSystem },
+                    { role: 'user', content: promptText + '\n\n请严格按照上述JSON格式返回，只返回JSON，不要包含markdown代码块标记。' }
+                ];
+
+                const payload = {
+                    model: apiConfig?.model || 'gpt-4o',
+                    messages: messages,
+                    response_format: { type: "json_object" },
+                    temperature: 0.8,
+                    max_tokens: 4096,
+                };
+
+                const data = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${keyToUse}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                let text = data.choices?.[0]?.message?.content;
+                if (!text) throw new Error("AI未能生成有效的内容");
+
+                // 清理可能的markdown代码块
+                text = text.trim();
+                if (text.startsWith('```json')) {
+                    text = text.slice(7);
+                } else if (text.startsWith('```')) {
+                    text = text.slice(3);
+                }
+                if (text.endsWith('```')) {
+                    text = text.slice(0, -3);
+                }
+                text = text.trim();
+
+                try {
+                    return JSON.parse(text);
+                } catch (parseErr) {
+                    console.error('JSON解析失败，原始响应:', text);
+                    throw new Error('AI返回的内容无法解析为JSON，请重试');
+                }
+            }
+        };
+
+        // 获取模型列表
+        const fetchModelsList = async (apiConfig) => {
+            const keyToUse = apiConfig?.key || defaultApiKey;
+            const baseUrl = (apiConfig?.url || "https://generativelanguage.googleapis.com").replace(/\/$/, "");
+            const apiType = apiConfig?.apiType || detectApiType(baseUrl);
+
+            if (apiType === 'gemini') {
+                const url = `${baseUrl}/v1beta/models?key=${encodeURIComponent(keyToUse)}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("获取模型列表失败，请检查 API Key 和 URL");
+                const data = await response.json();
+                return data.models
+                    .filter(m => m.supportedGenerationMethods?.includes("generateContent"))
+                    .map(m => m.name.replace("models/", ""));
+            } else {
+                const apiPath = baseUrl.endsWith('/v1') ? '/models' : '/v1/models';
+                const url = `${baseUrl}${apiPath}`;
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${keyToUse}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData?.error?.message || `获取模型列表失败 (HTTP ${response.status})`);
+                }
+                const data = await response.json();
+                // OpenAI格式返回 { data: [{ id: "model-name" }] }
+                if (data.data && Array.isArray(data.data)) {
+                    return data.data.map(m => m.id).filter(id => id && typeof id === 'string');
+                }
+                // 备选格式
+                if (data.models && Array.isArray(data.models)) {
+                    return data.models.map(m => m.id || m.name).filter(id => id && typeof id === 'string');
+                }
+                throw new Error("无法解析模型列表响应格式");
+            }
+        };
+
+        // ==========================================
+        // API: 生成初始天赋
+        // ==========================================
+        const generateTalents = async (worldview, worldDetails, apiConfig) => {
+            const prompt =
+                `当前世界观：${worldview}。附加深度设定：${worldDetails || '无'}。请生成10个符合该世界观的开局天赋。
+        【重要要求】：
+        1. 10个天赋中，必须包含**5个带负面效果的正面天赋**（即天赋主要是正面效果，但有明显的副作用或代价），剩下5个是纯正面或纯负面天赋。
+        2. 包含不同稀有度（普通、稀有、史诗、传说）。
+        3. 每个天赋要有有趣的名字和一句话描述（说明其带来的优势和劣势）。`;
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    talents: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                name: { type: "STRING" },
+                                description: { type: "STRING" },
+                                rarity: { type: "STRING", enum: ["普通", "稀有", "史诗", "传说"] }
+                            },
+                            required: ["name", "description", "rarity"]
+                        }
+                    }
+                },
+                required: ["talents"]
+            };
+            return await callAI(prompt, "你是一个人生模拟器的初始设定发牌官。根据世界观生成极具代入感的天赋卡牌。", schema,
+                apiConfig);
+        };
+
+        // ==========================================
+        // API: 批量生成普通年份事件
+        // ==========================================
+        const generateBatchEvents = async (worldview, worldDetails, gender, startAge, count, currentStats, history,
+            talents, apiConfig) => {
+            const historyText = history.length > 0 ? history.slice(-3).map(h => `${h.age}岁: ${h.event}`).join('\n') :
+                "暂无经历";
+            const talentsText = talents.map(t => `【${t.name}】(${t.rarity}): ${t.description}`).join('; ');
+
+            const prompt = `世界观：${worldview}
+        附加设定：${worldDetails || '无'}
+        角色性别：${gender}
+        当前天赋：${talentsText}
+        当前属性：体质 ${currentStats.health}, 智力 ${currentStats.intelligence}, 家境 ${currentStats.wealth}, 颜值 ${currentStats.appearance}, 快乐 ${currentStats.happiness}
+        过往摘要：\n${historyText}
+
+        请连续推演角色从 ${startAge} 岁开始，未来 ${count} 年的命运事件。
+        要求：
+        1. 每年生成一条记录。0岁必须是出生事件（结合天赋和家境）。
+        2. 属性变化规则【重要】：
+           - 每次事件每个属性变化必须在 -5 到 +5 之间
+           - 每次事件所有属性变化量之和（绝对值）不能超过 30
+        3. 死亡判定：如果遭遇危机或体质归零，将某年的 isDead 设为 true 并写明死因，后续年份停止生成。
+        4. 【重要原则】：天赋的作用应当在幕后潜移默化地影响事件走向和属性变化。在生成的事件文字中，尽量**不要直接出现天赋的名称**，而是将其转化为角色实际遭遇的幸运、厄运或特质表现。`;
+
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    events: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                age: { type: "INTEGER" },
+                                event: { type: "STRING" },
+                                statChanges: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        health: { type: "INTEGER" },
+                                        intelligence: { type: "INTEGER" },
+                                        wealth: { type: "INTEGER" },
+                                        appearance: { type: "INTEGER" },
+                                        happiness: { type: "INTEGER" }
+                                    }
+                                },
+                                isDead: { type: "BOOLEAN" },
+                                deathReason: { type: "STRING" }
+                            },
+                            required: ["age", "event", "statChanges", "isDead"]
+                        }
+                    }
+                },
+                required: ["events"]
+            };
+            return await callAI(prompt, "你是一个命运推演引擎，一次性生成接下来几年的事件轨迹。", schema, apiConfig);
+        };
+
+        // ==========================================
+        // API: 生成重大抉择事件前置选项 (逢5节点)
+        // ==========================================
+        const generateChoiceEvent = async (worldview, worldDetails, gender, age, currentStats, history, talents,
+        apiConfig) => {
+            const talentsText = talents.map(t => `【${t.name}】`).join(', ');
+            const prompt =
+                `世界观：${worldview} | 附加设定：${worldDetails || '无'} | 性别：${gender} | 当前年龄：${age}岁 | 天赋：${talentsText}
+        角色遇到一个**极具转折性的命运分水岭**（重大危机或重大机遇）！这个事件应当能大幅度改变角色的人生轨迹。
+        请提供事件背景描述（context，60字内），并提供 3 个**截然不同**的应对选项（如：铤而走险、保守行事、另辟蹊径等），每个选项都可能带来天差地别的结果。只给选项文本，不要写出结果。
+        【重要原则】：在背景描述和选项文本中，绝对**不要直接提及天赋的名称**，而是将天赋的影响转化为对局势的洞察或特殊的可用手段。`;
+
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    context: { type: "STRING" },
+                    choices: { type: "ARRAY", items: { type: "STRING" } }
+                },
+                required: ["context", "choices"]
+            };
+            return await callAI(prompt, "你是命运的裁决者，在关键年龄点向玩家抛出重大抉择。", schema, apiConfig);
+        };
+
+        // ==========================================
+        // API: 结算抉择并同时生成后续N年事件 + 动态天赋觉醒
+        // ==========================================
+        const resolveChoiceAndBatch = async (worldview, worldDetails, gender, age, count, context, choiceText, isCustom,
+            currentStats, statCounters, history, talents, apiConfig) => {
+            const talentsText = talents.map(t => `【${t.name}】`).join(', ');
+
+            const maxSingle = Math.max(...Object.values(statCounters).map(Math.abs));
+            const totalDelta = Object.values(statCounters).reduce((sum, val) => sum + Math.abs(val), 0);
+            const isAwakening = maxSingle >= 25 || totalDelta >= 50;
+
+            const prompt = `世界观：${worldview} | 附加设定：${worldDetails || '无'} | 性别：${gender} | 当前年龄：${age}岁 | 天赋：${talentsText}
+        当前属性：体 ${currentStats.health}, 智 ${currentStats.intelligence}, 财 ${currentStats.wealth}, 颜 ${currentStats.appearance}, 乐 ${currentStats.happiness}
+
+        【命运分水岭背景】：${context}
+        【玩家的选择】（${isCustom ? '手打输入' : '系统选项'}）："${choiceText}"
+
+        请执行两步推演：
+        第一步：根据玩家抉择，推演产生的结果（作为 ${age} 岁当年的经历）。这是重大抉择，允许出现意料之外的戏剧性的转折！属性变化不受限制，可以有较大波动。
+        第二步：基于此结果的影响，顺势向后推演未来 ${count} 年（即 ${age + 1} 岁 到 ${age + count} 岁）的常规人生轨迹。
+        【属性变化规则】：第二步的后续年份事件，每个属性变化必须在 -5 到 +5 之间，所有属性变化量之和（绝对值）不能超过 30。
+        ${isAwakening ? '\n【★★系统特殊指令 - 量变引起质变★★】：检测到玩家近期某项属性剧烈波动！请务必在返回的 JSON 中包含 `newTalent` 字段，为角色随机生成一个契合当前情境的新天赋（正面或负面皆可，描述控制在30字内）。' : ''}
+        如果角色在途中死亡，请在对应年份将 isDead 设为 true，并中断后续推演。
+        【重要原则】：天赋的作用须在底层逻辑发力，严禁在事件推演的文字描述中直接出现天赋的名称。`;
+
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    choiceOutcome: {
+                        type: "OBJECT",
+                        properties: {
+                            event: { type: "STRING" },
+                            statChanges: {
+                                type: "OBJECT",
+                                properties: {
+                                    health: { type: "INTEGER" },
+                                    intelligence: { type: "INTEGER" },
+                                    wealth: { type: "INTEGER" },
+                                    appearance: { type: "INTEGER" },
+                                    happiness: { type: "INTEGER" }
+                                }
+                            },
+                            isDead: { type: "BOOLEAN" },
+                            deathReason: { type: "STRING" }
+                        },
+                        required: ["event", "statChanges", "isDead"]
+                    },
+                    subsequentEvents: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                age: { type: "INTEGER" },
+                                event: { type: "STRING" },
+                                statChanges: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        health: { type: "INTEGER" },
+                                        intelligence: { type: "INTEGER" },
+                                        wealth: { type: "INTEGER" },
+                                        appearance: { type: "INTEGER" },
+                                        happiness: { type: "INTEGER" }
+                                    }
+                                },
+                                isDead: { type: "BOOLEAN" },
+                                deathReason: { type: "STRING" }
+                            },
+                            required: ["age", "event", "statChanges", "isDead"]
+                        }
+                    }
+                },
+                required: ["choiceOutcome", "subsequentEvents"]
+            };
+
+            if (isAwakening) {
+                schema.properties.newTalent = {
+                    type: "OBJECT",
+                    properties: {
+                        name: { type: "STRING" },
+                        description: { type: "STRING" },
+                        rarity: { type: "STRING", enum: ["普通", "稀有", "史诗", "传说"] }
+                    },
+                    required: ["name", "description", "rarity"]
+                };
+                schema.required.push("newTalent");
+            }
+
+            return await callAI(prompt, "你是命运引擎，负责结算玩家重大选择的后果，并一次性补齐未来数年的时间线。", schema,
+                apiConfig);
+        };
+
+        // ==========================================
+        // API: 后日谈生成（评价与打分）
+        // ==========================================
+        const generateEpilogue = async (worldview, worldDetails, gender, currentStats, history, talents, apiConfig) => {
+            const historyText = history.map(h => `${h.age}岁: ${h.event}`).join('\n');
+            const talentsText = talents.map(t => `【${t.name}】`).join(', ');
+
+            const prompt = `世界观：${worldview} | 附加设定：${worldDetails || '无'} | 性别：${gender} | 享年：${history[history.length-1]?.age || 0}岁
+        最终天赋：${talentsText}
+        最终属性：体质 ${currentStats.health}, 智力 ${currentStats.intelligence}, 家境 ${currentStats.wealth}, 颜值 ${currentStats.appearance}, 快乐 ${currentStats.happiness}
+
+        一生回顾：
+        ${historyText}
+
+        角色已经死亡。请作为命运的旁观者，为他/她撰写【后日谈】。
+        要求包含：
+        1. 【综合评分】（0-100分）：根据寿命长短、属性高低、经历的传奇程度综合评定。
+        2. 【戏剧性评分】（0-100分）：评估人生经历的戏剧化程度，包括命运起伏、意外转折、戏剧性事件的丰富程度。
+        3. 【成就度评分】（0-100分）：评估人生成就的高低，包括达成的目标、积累的财富、建立的功绩等。
+        4. 【意义感评分】（0-100分）：评估人生意义的深度，包括情感体验的丰富度、精神成长、内在满足感等。
+        5. 盖棺定论的【人生称号】（最多6个字，如：籍籍无名、修仙奇才、赛博传奇、英年早逝等）。
+        6. 【墓志铭/总结】：一段生动深刻的总结评价（约80-120字），点评其一生的高光时刻或最大遗憾。`;
+
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    score: { type: "INTEGER", description: "综合评分0-100" },
+                    dramaScore: { type: "INTEGER", description: "戏剧性评分0-100" },
+                    achievementScore: { type: "INTEGER", description: "成就度评分0-100" },
+                    meaningScore: { type: "INTEGER", description: "意义感评分0-100" },
+                    title: { type: "STRING", description: "人生称号，最多6字" },
+                    summary: { type: "STRING", description: "墓志铭/总结，约80-120字" }
+                },
+                required: ["score", "dramaScore", "achievementScore", "meaningScore", "title", "summary"]
+            };
+            return await callAI(prompt, "你是命运的记录者，为逝去的生命撰写客观又带有情感色彩的墓志铭及评分。", schema,
+                apiConfig);
+        };
+
+        // ==========================================
+        // 3. 主应用组件
+        // ==========================================
+        function App() {
+            // 从localStorage恢复API配置
+            const savedApiConfig = loadFromStorage(STORAGE_KEYS.API_CONFIG);
+            const defaultApiConfig = {
+                url: "https://generativelanguage.googleapis.com",
+                key: "",
+                model: "gemini-2.5-flash-preview-09-2025",
+                apiType: "gemini"
+            };
+
+            const [apiConfig, setApiConfig] = useState(savedApiConfig || defaultApiConfig);
+            const [showSettings, setShowSettings] = useState(false);
+            const [availableModels, setAvailableModels] = useState(() => {
+                const cached = loadFromStorage(STORAGE_KEYS.AVAILABLE_MODELS);
+                return cached || [];
+            });
+            const [fetchingModels, setFetchingModels] = useState(false);
+
+            // 检查是否有存档
+            const hasSaveData = useRef(!!loadFromStorage(STORAGE_KEYS.SAVE));
+
+            const [gameState, setGameState] = useState('setup_world');
+            const [worldview, setWorldview] = useState("现代都市");
+            const [worldDetails, setWorldDetails] = useState("");
+            const [gender, setGender] = useState("随机");
+
+            const [availableTalents, setAvailableTalents] = useState([]);
+            const [selectedTalents, setSelectedTalents] = useState([]);
+
+            const initialStats = { health: 0, intelligence: 0, wealth: 0, appearance: 0, happiness: 0 };
+            const [stats, setStats] = useState(initialStats);
+            const [availablePoints, setAvailablePoints] = useState(20);
+
+            const [statCounters, setStatCounters] = useState({ health: 0, intelligence: 0, wealth: 0, appearance: 0,
+                happiness: 0 });
+
+            const [age, setAge] = useState(0);
+            const [history, setHistory] = useState([]);
+            const [eventBuffer, setEventBuffer] = useState([]);
+
+            const [choiceEvent, setChoiceEvent] = useState(null);
+            const [customInput, setCustomInput] = useState("");
+            const [pendingChoice, setPendingChoice] = useState(null);
+
+            const [epilogue, setEpilogue] = useState(null);
+            const [epilogueLoading, setEpilogueLoading] = useState(false);
+            const [showLifeReview, setShowLifeReview] = useState(false);
+            const [pastRecords, setPastRecords] = useState(() => loadFromStorage(STORAGE_KEYS.PAST_RECORDS) || []);
+            const [reviewRecord, setReviewRecord] = useState(null);
+
+            const [loading, setLoading] = useState(false);
+            const [loadingMsg, setLoadingMsg] = useState("");
+            const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+            const [errorMsg, setErrorMsg] = useState("");
+
+            const messagesEndRef = useRef(null);
+            const stateRef = useRef({ worldview, worldDetails, gender, age, stats, history, selectedTalents, eventBuffer,
+                statCounters, apiConfig });
+
+            const presets = ["现代都市", "赛博朋克", "修仙世界", "丧尸末日", "霍格沃茨", "克苏鲁神话"];
+
+            const rarityColors = {
+                "普通": "border-gray-500 bg-gray-800 text-gray-300",
+                "稀有": "border-blue-500 bg-blue-900/40 text-blue-300",
+                "史诗": "border-purple-500 bg-purple-900/40 text-purple-300",
+                "传说": "border-yellow-500 bg-yellow-900/40 text-yellow-400 shadow-yellow-500/20 shadow-lg",
+            };
+
+            const rarityTextColors = {
+                "普通": "text-gray-300",
+                "稀有": "text-blue-300",
+                "史诗": "text-purple-300",
+                "传说": "text-yellow-400"
+            };
+
+            // 同步stateRef
+            useEffect(() => {
+                stateRef.current = { worldview, worldDetails, gender, age, stats, history, selectedTalents,
+                    eventBuffer, statCounters, apiConfig };
+            }, [worldview, worldDetails, gender, age, stats, history, selectedTalents, eventBuffer, statCounters,
+                apiConfig
+            ]);
+
+            // 持久化API配置
+            useEffect(() => {
+                saveToStorage(STORAGE_KEYS.API_CONFIG, apiConfig);
+            }, [apiConfig]);
+
+            // 自动存档 - 在游戏进行中保存
+            useEffect(() => {
+                if (['playing', 'choosing', 'dead'].includes(gameState)) {
+                    const saveData = {
+                        gameState,
+                        worldview,
+                        worldDetails,
+                        gender,
+                        stats,
+                        statCounters,
+                        age,
+                        history,
+                        eventBuffer,
+                        selectedTalents,
+                        availableTalents,
+                        choiceEvent,
+                        epilogue,
+                        availablePoints,
+                    };
+                    saveToStorage(STORAGE_KEYS.SAVE, saveData);
+                    hasSaveData.current = true;
+                }
+            }, [gameState, worldview, worldDetails, gender, stats, statCounters, age, history, eventBuffer,
+                selectedTalents, availableTalents, choiceEvent, epilogue, availablePoints
+            ]);
+
+            // 滚动聚焦监听
+            useEffect(() => {
+                if (['playing', 'dead', 'choosing'].includes(gameState)) {
+                    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+                }
+            }, [history, choiceEvent, loading, gameState, selectedTalents, pendingChoice, epilogue, epilogueLoading]);
+
+            // ==========================================
+            // 存档相关函数
+            // ==========================================
+            const loadSaveGame = useCallback(() => {
+                const saveData = loadFromStorage(STORAGE_KEYS.SAVE);
+                if (!saveData) return false;
+
+                setGameState(saveData.gameState || 'playing');
+                setWorldview(saveData.worldview || '现代都市');
+                setWorldDetails(saveData.worldDetails || '');
+                setGender(saveData.gender || '随机');
+                setStats(saveData.stats || initialStats);
+                setStatCounters(saveData.statCounters || { health: 0, intelligence: 0, wealth: 0, appearance: 0,
+                    happiness: 0 });
+                setAge(saveData.age || 0);
+                setHistory(saveData.history || []);
+                setEventBuffer(saveData.eventBuffer || []);
+                setSelectedTalents(saveData.selectedTalents || []);
+                setAvailableTalents(saveData.availableTalents || []);
+                setChoiceEvent(saveData.choiceEvent || null);
+                setEpilogue(saveData.epilogue || null);
+                setAvailablePoints(saveData.availablePoints ?? 20);
+                setPendingChoice(null);
+                setCustomInput("");
+                setIsAutoPlaying(false);
+                setErrorMsg("");
+                return true;
+            }, []);
+
+            const clearSaveData = useCallback(() => {
+                clearStorage(STORAGE_KEYS.SAVE);
+                hasSaveData.current = false;
+            }, []);
+
+            // ==========================================
+            // 3. 游戏核心逻辑
+            // ==========================================
+            const handleDrawTalents = async () => {
+                if (!worldview.trim()) setWorldview("现代都市");
+                setLoading(true);
+                setLoadingMsg("正在向主神空间申请天赋...");
+                setErrorMsg("");
+                try {
+                    const res = await generateTalents(worldview || "现代都市", worldDetails, apiConfig);
+                    setAvailableTalents(res.talents || []);
+                    setGameState('setup_talents');
+                } catch (err) {
+                    setErrorMsg("抽取天赋失败：" + err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const toggleTalent = (talent) => {
+                if (selectedTalents.find(t => t.name === talent.name)) {
+                    setSelectedTalents(prev => prev.filter(t => t.name !== talent.name));
+                } else {
+                    if (selectedTalents.length < 3) setSelectedTalents(prev => [...prev, talent]);
+                }
+            };
+
+            const addPoint = (statKey) => {
+                if (availablePoints > 0 && stats[statKey] < 10) {
+                    setStats(prev => ({ ...prev, [statKey]: prev[statKey] + 1 }));
+                    setAvailablePoints(prev => prev - 1);
+                }
+            };
+
+            const removePoint = (statKey) => {
+                if (stats[statKey] > 0) {
+                    setStats(prev => ({ ...prev, [statKey]: prev[statKey] - 1 }));
+                    setAvailablePoints(prev => prev + 1);
+                }
+            };
+
+            const randomizeStats = () => {
+                let points = 20;
+                const newStats = { ...initialStats };
+                const keys = Object.keys(newStats);
+                while (points > 0) {
+                    const key = keys[Math.floor(Math.random() * keys.length)];
+                    if (newStats[key] < 10) {
+                        newStats[key]++;
+                        points--;
+                    }
+                }
+                setStats(newStats);
+                setAvailablePoints(0);
+            };
+
+            const startGame = () => {
+                if (selectedTalents.length !== 3) return alert("请选择3个天赋！");
+                if (availablePoints > 0) return alert("请先分配完所有属性点！");
+
+                setAge(0);
+                setHistory([]);
+                setEventBuffer([]);
+                setStatCounters({ health: 0, intelligence: 0, wealth: 0, appearance: 0, happiness: 0 });
+                setEpilogue(null);
+                setEpilogueLoading(false);
+                setGameState('playing');
+                setIsAutoPlaying(false);
+                setErrorMsg("");
+                clearSaveData();
+            };
+
+            const restartGame = () => {
+                setGameState('setup_world');
+                setStats(initialStats);
+                setAvailablePoints(20);
+                setSelectedTalents([]);
+                setAvailableTalents([]);
+                setAge(0);
+                setHistory([]);
+                setEventBuffer([]);
+                setStatCounters({ health: 0, intelligence: 0, wealth: 0, appearance: 0, happiness: 0 });
+                setChoiceEvent(null);
+                setPendingChoice(null);
+                setEpilogue(null);
+                setEpilogueLoading(false);
+                setIsAutoPlaying(false);
+                clearSaveData();
+            };
+
+            // 快速结束人生
+            const handleEndLife = () => {
+                if (!confirm('确定要结束当前人生吗？这将触发死亡和后日谈。')) return;
+                setIsAutoPlaying(false);
+                const current = stateRef.current;
+                const deathEvent = {
+                    age: current.age,
+                    event: '【主动终结】你选择在此刻结束自己的人生旅程。',
+                    statChanges: { health: 0, intelligence: 0, wealth: 0, appearance: 0, happiness: 0 },
+                    isDead: true,
+                    deathReason: '自己选择了生命的终点。'
+                };
+                setHistory(prev => [...prev, deathEvent]);
+                setGameState('dead');
+                setEventBuffer([]);
+                setChoiceEvent(null);
+                setPendingChoice(null);
+                setEpilogue(null);
+                setEpilogueLoading(false);
+            };
+
+            // 快速重开（跳过死亡后日谈）
+            const handleQuickRestart = () => {
+                if (!confirm('确定要快速重开吗？当前进度将全部丢失。')) return;
+                restartGame();
+            };
+
+            const processEvent = (result, resetCounters = false, bypassLimit = false) => {
+                const current = stateRef.current;
+                const rawChanges = result.statChanges || {};
+                const changes = {};
+
+                if (bypassLimit) {
+                    ['health', 'intelligence', 'wealth', 'appearance', 'happiness'].forEach(key => {
+                        changes[key] = rawChanges[key] || 0;
+                    });
+                } else {
+                    ['health', 'intelligence', 'wealth', 'appearance', 'happiness'].forEach(key => {
+                        changes[key] = Math.max(-5, Math.min(5, rawChanges[key] || 0));
+                    });
+
+                    const totalChange = Object.values(changes).reduce((sum, val) => sum + Math.abs(val), 0);
+                    if (totalChange > 30) {
+                        const scale = 30 / totalChange;
+                        ['health', 'intelligence', 'wealth', 'appearance', 'happiness'].forEach(key => {
+                            changes[key] = Math.round(changes[key] * scale);
+                        });
+                    }
+                }
+
+                const newStats = {
+                    health: current.stats.health + changes.health,
+                    intelligence: current.stats.intelligence + changes.intelligence,
+                    wealth: current.stats.wealth + changes.wealth,
+                    appearance: current.stats.appearance + changes.appearance,
+                    happiness: current.stats.happiness + changes.happiness,
+                };
+
+                let died = result.isDead;
+                let finalReason = result.deathReason || "死因不明";
+                if (!died && newStats.health <= 0) {
+                    died = true;
+                    finalReason = "体质彻底归零，油尽灯枯。";
+                }
+
+                setStats(newStats);
+
+                const eventAge = result.age !== undefined ? result.age : current.age;
+
+                setHistory(prev => [...prev, {
+                    age: eventAge,
+                    event: result.event,
+                    statChanges: changes,
+                    isDead: died,
+                    deathReason: finalReason
+                }]);
+
+                if (died) {
+                    setGameState('dead');
+                    setIsAutoPlaying(false);
+                    setEventBuffer([]);
+                } else {
+                    setAge(eventAge + 1);
+                }
+
+                if (resetCounters) {
+                    setStatCounters({ health: 0, intelligence: 0, wealth: 0, appearance: 0, happiness: 0 });
+                } else {
+                    setStatCounters({
+                        health: current.statCounters.health + changes.health,
+                        intelligence: current.statCounters.intelligence + changes.intelligence,
+                        wealth: current.statCounters.wealth + changes.wealth,
+                        appearance: current.statCounters.appearance + changes.appearance,
+                        happiness: current.statCounters.happiness + changes.happiness,
+                    });
+                }
+            };
+
+            const handleNextYear = async () => {
+                if (loading || gameState !== 'playing') return;
+                const current = stateRef.current;
+
+                const isNodeYear = current.age > 0 && current.age % 5 === 0;
+
+                if (isNodeYear && !current.history.find(h => h.age === current.age)) {
+                    setIsAutoPlaying(false);
+                    setLoading(true);
+                    setLoadingMsg(`正在酝酿 ${current.age} 岁的命运分水岭...`);
+                    try {
+                        const choiceData = await generateChoiceEvent(current.worldview, current.worldDetails, current
+                            .gender, current.age, current.stats, current.history, current.selectedTalents, current
+                            .apiConfig);
+                        setChoiceEvent(choiceData);
+                        setGameState('choosing');
+                    } catch (err) {
+                        setErrorMsg("生成命运抉择失败：" + err.message);
+                    } finally {
+                        setLoading(false);
+                    }
+                    return;
+                }
+
+                if (current.eventBuffer.length > 0) {
+                    const nextEvent = current.eventBuffer[0];
+                    setEventBuffer(prev => prev.slice(1));
+                    processEvent(nextEvent);
+                } else {
+                    setLoading(true);
+                    setLoadingMsg("正在洞察未来几年的命运流转...");
+                    try {
+                        let count = 5 - (current.age % 5);
+                        if (count === 0) count = 5;
+
+                        const batchRes = await generateBatchEvents(current.worldview, current.worldDetails, current
+                            .gender, current.age, count, current.stats, current.history, current.selectedTalents,
+                            current.apiConfig);
+                        const events = batchRes.events || [];
+                        if (events.length > 0) {
+                            const firstEvent = events[0];
+                            setEventBuffer(events.slice(1));
+                            processEvent(firstEvent);
+                        } else {
+                            throw new Error("AI未返回事件列表");
+                        }
+                    } catch (err) {
+                        setErrorMsg("命运长河出现波动：" + err.message);
+                        setIsAutoPlaying(false);
+                    } finally {
+                        setLoading(false);
+                    }
+                }
+            };
+
+            const handleMakeChoice = async (choiceText, isCustom = false) => {
+                if (!choiceText.trim()) return;
+                setLoading(true);
+                setLoadingMsg("正在收束时间线并推演深远影响...");
+                const current = stateRef.current;
+                try {
+                    const count = 4;
+                    const result = await resolveChoiceAndBatch(
+                        current.worldview, current.worldDetails, current.gender, current.age, count, choiceEvent.context,
+                        choiceText, isCustom,
+                        current.stats, current.statCounters, current.history, current.selectedTalents, current.apiConfig
+                    );
+
+                    const choiceOutcome = result.choiceOutcome;
+                    choiceOutcome.event =
+                        `【抉择】${choiceEvent.context}\n【你决定】${choiceText}\n【结局】${choiceOutcome.event}`;
+                    choiceOutcome.age = current.age;
+
+                    const hasNewTalent = !!result.newTalent;
+                    if (hasNewTalent) {
+                        choiceOutcome.event +=
+                            `\n✨【量变引起质变】由于你近期的经历跌宕起伏，你顿悟了新天赋：[${result.newTalent.name}]！`;
+                        setSelectedTalents(prev => [...prev, result.newTalent]);
+                    }
+
+                    const subsequent = (result.subsequentEvents || []).map((ev, i) => ({
+                        ...ev,
+                        age: current.age + 1 + i
+                    }));
+
+                    setChoiceEvent(null);
+                    setCustomInput("");
+                    setPendingChoice(null);
+                    setGameState('playing');
+
+                    if (choiceOutcome.isDead) {
+                        setEventBuffer([]);
+                    } else {
+                        setEventBuffer(subsequent);
+                    }
+
+                    processEvent(choiceOutcome, hasNewTalent, true);
+
+                } catch (err) {
+                    setErrorMsg("结算抉择失败：" + err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            // 监听死亡状态以触发后日谈生成
+            useEffect(() => {
+                if (gameState === 'dead' && !epilogue && !epilogueLoading) {
+                    const fetchEpilogueFn = async () => {
+                        setEpilogueLoading(true);
+                        try {
+                            const current = stateRef.current;
+                            const res = await generateEpilogue(
+                                current.worldview, current.worldDetails, current.gender,
+                                current.stats, current.history, current.selectedTalents, current.apiConfig
+                            );
+                            setEpilogue(res);
+                        } catch (err) {
+                            console.error("生成后日谈失败:", err);
+                            setEpilogue({ score: 0, title: "未知旅人", summary: "系统干扰，无法查阅此人的墓志铭。" });
+                        } finally {
+                            setEpilogueLoading(false);
+                        }
+                    };
+                    fetchEpilogueFn();
+                }
+            }, [gameState, epilogue, epilogueLoading]);
+
+            // 后日谈生成后，保存完整人生记录到历史
+            useEffect(() => {
+                if (gameState === 'dead' && epilogue && !epilogueLoading) {
+                    const record = {
+                        id: Date.now(),
+                        worldview: stateRef.current.worldview,
+                        worldDetails: stateRef.current.worldDetails,
+                        gender: stateRef.current.gender,
+                        stats: { ...stateRef.current.stats },
+                        history: [...stateRef.current.history],
+                        talents: stateRef.current.selectedTalents.map(t => ({ ...t })),
+                        epilogue: { ...epilogue },
+                        createdAt: new Date().toLocaleString(),
+                        title: epilogue.title,
+                        score: epilogue.score,
+                    };
+                    setPastRecords(prev => {
+                        const newRecords = [record, ...prev].slice(0, 20);
+                        saveToStorage(STORAGE_KEYS.PAST_RECORDS, newRecords);
+                        return newRecords;
+                    });
+                }
+            }, [gameState, epilogue, epilogueLoading]);
+
+            // 游戏初次启动与自动播放
+            useEffect(() => {
+                if (gameState === 'playing' && age === 0 && history.length === 0) {
+                    handleNextYear();
+                }
+            }, [gameState]);
+
+            useEffect(() => {
+                let timeoutId;
+                if (isAutoPlaying && gameState === 'playing' && !loading && !pendingChoice) {
+                    timeoutId = setTimeout(() => {
+                        handleNextYear();
+                    }, 1200);
+                }
+                return () => clearTimeout(timeoutId);
+            }, [isAutoPlaying, gameState, loading, age, eventBuffer, pendingChoice]);
+
+            // ==========================================
+            // 4. UI 渲染辅助
+            // ==========================================
+            const renderStatChanges = (changes) => {
+                if (!changes) return null;
+                const map = {
+                    health: { icon: React.createElement(Icon.Heart, { size: 14 }) },
+                    intelligence: { icon: React.createElement(Icon.Brain, { size: 14 }) },
+                    wealth: { icon: React.createElement(Icon.Coins, { size: 14 }) },
+                    appearance: { icon: React.createElement(Icon.Sparkles, { size: 14 }) },
+                    happiness: { icon: React.createElement(Icon.Smile, { size: 14 }) }
+                };
+
+                return Object.entries(changes).map(([k, v]) => {
+                    if (!v || v === 0) return null;
+                    const isPos = v > 0;
+                    return React.createElement('span', {
+                        key: k,
+                        className: `flex items-center gap-1 font-bold ${isPos ? "text-emerald-400" : "text-rose-400"}`
+                    }, map[k].icon, ` ${isPos ? '+' : ''}${v}`);
+                }).filter(Boolean);
+            };
+
+            const StatBox = ({ icon, label, value, colorClass }) =>
+                React.createElement('div', {
+                    className: `flex flex-col items-center p-2 rounded-lg bg-gray-800/80 border border-gray-700/50 shadow-sm ${colorClass}`
+                },
+                    React.createElement('div', { className: 'flex items-center gap-1 mb-1 text-xs opacity-80' },
+                        icon,
+                        React.createElement('span', null, label)
+                    ),
+                    React.createElement('div', { className: 'font-mono text-xl font-bold' }, value)
+                );
+
+            const fetchModelsListHandler = async () => {
+                setFetchingModels(true);
+                try {
+                    const models = await fetchModelsList(apiConfig);
+                    setAvailableModels(models);
+                    saveToStorage(STORAGE_KEYS.AVAILABLE_MODELS, models);
+                    if (models.length > 0 && !models.includes(apiConfig.model)) {
+                        setApiConfig(prev => ({ ...prev, model: models[0] }));
+                    }
+                } catch (err) {
+                    alert(err.message);
+                } finally {
+                    setFetchingModels(false);
+                }
+            };
+
+            // ==========================================
+            // 渲染
+            // ==========================================
+            if (showLifeReview && (epilogue || reviewRecord)) {
+                const r = reviewRecord || null;
+                const rEpilogue = r ? r.epilogue : epilogue;
+                const rStats = r ? r.stats : stats;
+                const rHistory = r ? r.history : history;
+                const rTalents = r ? r.talents : selectedTalents;
+                return React.createElement('div', {
+                    className: "fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300"
+                },
+                    React.createElement('div', {
+                        className: "bg-gradient-to-br from-gray-900 to-purple-950/50 border border-purple-800/50 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+                    },
+                        React.createElement('div', {
+                            className: "flex items-center justify-between p-6 border-b border-purple-800/50"
+                        },
+                            React.createElement('h2', {
+                                className: "text-xl font-bold text-purple-300 flex items-center gap-2"
+                            },
+                                React.createElement(Icon.ScrollText, { size: 20 }),
+                                '人生回顾',
+                                r && React.createElement('span', {
+                                    className: "text-xs text-gray-500 font-normal ml-2"
+                                }, `—— ${r.worldview} · ${r.gender} · ${r.createdAt}`)
+                            ),
+                            React.createElement('button', {
+                                onClick: () => { setShowLifeReview(false);
+                                    setReviewRecord(null); },
+                                className: "w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition-colors"
+                            }, React.createElement(Icon.X, { size: 20 }))
+                        ),
+                        React.createElement('div', {
+                            className: "flex-1 overflow-y-auto p-6"
+                        },
+                            React.createElement('div', {
+                                className: "mb-8"
+                            },
+                                React.createElement('h3', {
+                                    className: "text-lg font-bold text-purple-400 mb-4 flex items-center gap-2"
+                                },
+                                    React.createElement(Icon.ScrollText, { size: 18 }),
+                                    '一生评分'
+                                ),
+                                React.createElement('div', {
+                                    className: "grid grid-cols-2 md:grid-cols-4 gap-4"
+                                },
+                                    [
+                                        { label: '综合评分', value: rEpilogue.score ?? 0, color: 'from-purple-400 to-purple-600' },
+                                        { label: '戏剧性', value: rEpilogue.dramaScore ?? 0, color: 'from-amber-400 to-amber-600' },
+                                        { label: '成就度', value: rEpilogue.achievementScore ?? 0, color: 'from-purple-400 to-pink-600' },
+                                        { label: '意义感', value: rEpilogue.meaningScore ?? 0, color: 'from-blue-400 to-blue-600' }
+                                    ].map((item, idx) =>
+                                        React.createElement('div', {
+                                            key: idx,
+                                            className: `bg-gray-800/50 rounded-xl p-4 border border-gray-700/50 text-center bg-gradient-to-br ${item.color}`
+                                        },
+                                            React.createElement('div', {
+                                                className: "text-3xl font-black text-white"
+                                            }, item.value),
+                                            React.createElement('div', {
+                                                className: "text-xs text-gray-300 mt-1"
+                                            }, item.label)
+                                        )
+                                    )
+                                ),
+                                React.createElement('div', {
+                                    className: "mt-4 bg-gray-800/30 rounded-xl p-4 border border-purple-800/30"
+                                },
+                                    React.createElement('div', {
+                                        className: "text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-amber-300 mb-2"
+                                    }, `【${rEpilogue.title}】`),
+                                    React.createElement('p', {
+                                        className: "text-gray-300 text-sm leading-relaxed"
+                                    }, rEpilogue.summary)
+                                )
+                            ),
+                            React.createElement('div', {
+                                className: "mb-8"
+                            },
+                                React.createElement('h3', {
+                                    className: "text-lg font-bold text-purple-400 mb-4 flex items-center gap-2"
+                                },
+                                    React.createElement(Icon.Brain, { size: 18 }),
+                                    '最终属性'
+                                ),
+                                React.createElement('div', {
+                                    className: "grid grid-cols-5 gap-3"
+                                },
+                                    [
+                                        { label: '体质', value: rStats.health },
+                                        { label: '智力', value: rStats.intelligence },
+                                        { label: '家境', value: rStats.wealth },
+                                        { label: '颜值', value: rStats.appearance },
+                                        { label: '快乐', value: rStats.happiness }
+                                    ].map((item, idx) =>
+                                        React.createElement('div', {
+                                            key: idx,
+                                            className: "bg-gray-800/50 rounded-xl p-3 border border-gray-700/50 text-center"
+                                        },
+                                            React.createElement('div', {
+                                                className: "text-xl font-black text-white"
+                                            }, item.value),
+                                            React.createElement('div', {
+                                                className: "text-xs text-gray-400"
+                                            }, item.label)
+                                        )
+                                    )
+                                )
+                            ),
+                            React.createElement('div', {
+                                className: "mb-8"
+                            },
+                                React.createElement('h3', {
+                                    className: "text-lg font-bold text-purple-400 mb-4 flex items-center gap-2"
+                                },
+                                    React.createElement(Icon.Star, { size: 18 }),
+                                    '天赋'
+                                ),
+                                React.createElement('div', {
+                                    className: "flex flex-wrap gap-2"
+                                },
+                                    rTalents.map((t, idx) =>
+                                        React.createElement('span', {
+                                            key: idx,
+                                            className: `text-xs px-3 py-1.5 rounded-full border ${rarityColors[t.rarity] || rarityColors["普通"]}`
+                                        }, t.name)
+                                    )
+                                )
+                            ),
+                            React.createElement('div', null,
+                                React.createElement('h3', {
+                                    className: "text-lg font-bold text-purple-400 mb-4 flex items-center gap-2"
+                                },
+                                    React.createElement(Icon.ScrollText, { size: 18 }),
+                                    '人生时间线'
+                                ),
+                                React.createElement('div', {
+                                    className: "space-y-4"
+                                },
+                                    rHistory.map((item, idx) =>
+                                        React.createElement('div', {
+                                            key: idx,
+                                            className: "flex gap-4"
+                                        },
+                                            React.createElement('div', {
+                                                className: "flex flex-col items-center"
+                                            },
+                                                React.createElement('div', {
+                                                    className: "w-3 h-3 rounded-full bg-purple-500 mt-1.5"
+                                                }),
+                                                idx < rHistory.length - 1 && React.createElement('div', {
+                                                    className: "w-0.5 flex-1 bg-purple-900/50"
+                                                })
+                                            ),
+                                            React.createElement('div', {
+                                                className: "flex-1 pb-4"
+                                            },
+                                                React.createElement('div', {
+                                                    className: "text-xs text-purple-400 font-bold mb-1"
+                                                }, `${item.age}岁`),
+                                                React.createElement('div', {
+                                                    className: "text-sm text-gray-300"
+                                                }, item.event),
+                                                item.statChanges && Object.values(item.statChanges).some(v => v !== 0) && React.createElement('div', {
+                                                    className: "flex gap-2 mt-2 text-xs"
+                                                },
+                                                    Object.entries(item.statChanges).filter(([_, v]) => v !== 0).map(([key, val]) =>
+                                                        React.createElement('span', {
+                                                            key,
+                                                            className: val > 0 ? "text-green-400" : "text-red-400"
+                                                        }, `${key === 'health' ? '体' : key === 'intelligence' ? '智' : key === 'wealth' ? '财' : key === 'appearance' ? '颜' : '乐'}${val > 0 ? '+' : ''}${val}`)
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        React.createElement('div', {
+                            className: "p-6 border-t border-purple-800/50 flex justify-center"
+                        },
+                            React.createElement('button', {
+                                onClick: () => { setShowLifeReview(false);
+                                    setReviewRecord(null); },
+                                className: "flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white px-8 py-3 rounded-full font-bold transition-all"
+                            }, React.createElement(Icon.X, { size: 18 }), '关闭')
+                        )
+                    )
+                );
+            }
+
+            return React.createElement('div', {
+                    className: "min-h-screen bg-gray-950 text-gray-100 font-sans selection:bg-purple-500/30 pb-20 relative"
+                },
+
+                // Settings Modal
+                showSettings && React.createElement('div', {
+                        className: "fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                    },
+                    React.createElement('div', {
+                            className: "bg-gray-900 border border-gray-700 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
+                        },
+                        React.createElement('div', {
+                            className: "flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900/50"
+                        },
+                            React.createElement('h3', { className: "text-lg font-bold flex items-center gap-2" },
+                                React.createElement(Icon.Settings, { size: 18 }), ' API 设置'),
+                            React.createElement('button', {
+                                onClick: () => setShowSettings(false),
+                                className: "text-gray-400 hover:text-white transition-colors"
+                            }, React.createElement(Icon.X, { size: 20 }))
+                        ),
+                        React.createElement('div', { className: "p-5 space-y-4" },
+                            // API类型选择
+                            React.createElement('div', null,
+                                React.createElement('label', { className: "block text-xs font-bold text-gray-400 mb-1" },
+                                    'API 类型'),
+                                React.createElement('div', { className: "flex gap-2" },
+                                    ['gemini', 'openai'].map(t =>
+                                        React.createElement('button', {
+                                            key: t,
+                                            onClick: () => setApiConfig({ ...apiConfig,
+                                                apiType: t }),
+                                            className: `flex-1 py-2 rounded-lg text-sm font-bold transition-all border ${
+                                                apiConfig.apiType === t
+                                                    ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/30'
+                                                    : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700'
+                                            }`
+                                        }, t === 'gemini' ? 'Gemini 格式' : 'OpenAI 兼容格式')
+                                    )
+                                )
+                            ),
+                            // Base URL
+                            React.createElement('div', null,
+                                React.createElement('label', { className: "block text-xs font-bold text-gray-400 mb-1" },
+                                    'API Base URL'),
+                                React.createElement('input', {
+                                    type: 'text',
+                                    value: apiConfig.url,
+                                    onChange: e => {
+                                        const newUrl = e.target.value;
+                                        const detectedType = detectApiType(newUrl);
+                                        setApiConfig({
+                                            ...apiConfig,
+                                            url: newUrl,
+                                            apiType: apiConfig.apiType || detectedType
+                                        });
+                                    },
+                                    className: "w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-purple-500 outline-none transition-colors",
+                                    placeholder: apiConfig.apiType === 'gemini' ?
+                                        "https://generativelanguage.googleapis.com" :
+                                        "https://api.openai.com"
+                                })
+                            ),
+                            // API Key
+                            React.createElement('div', null,
+                                React.createElement('label', { className: "block text-xs font-bold text-gray-400 mb-1" },
+                                    'API Key',
+                                    React.createElement('span', { className: "text-gray-600 font-normal ml-1" },
+                                        '(安全存储在本地浏览器)')
+                                ),
+                                React.createElement('input', {
+                                    type: 'password',
+                                    value: apiConfig.key,
+                                    onChange: e => setApiConfig({ ...apiConfig, key: e.target.value }),
+                                    className: "w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-purple-500 outline-none transition-colors",
+                                    placeholder: "输入 API Key..."
+                                })
+                            ),
+                            // 模型名称
+                            React.createElement('div', null,
+                                React.createElement('label', { className: "block text-xs font-bold text-gray-400 mb-1" },
+                                    '模型名称'),
+                                React.createElement('div', { className: "flex gap-2" },
+                                    availableModels.length > 0 ?
+                                    React.createElement('select', {
+                                        value: apiConfig.model,
+                                        onChange: e => setApiConfig({ ...apiConfig, model: e.target
+                                                .value }),
+                                        className: "flex-1 bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-purple-500 outline-none transition-colors"
+                                    }, availableModels.map(m => React.createElement('option', { key: m,
+                                            value: m }, m))) :
+                                    React.createElement('input', {
+                                        type: 'text',
+                                        value: apiConfig.model,
+                                        onChange: e => setApiConfig({ ...apiConfig, model: e.target
+                                                .value }),
+                                        className: "flex-1 bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-purple-500 outline-none transition-colors",
+                                        placeholder: apiConfig.apiType === 'gemini' ?
+                                            "gemini-2.5-flash-preview-09-2025" : "gpt-4o"
+                                    }),
+                                    React.createElement('button', {
+                                        onClick: fetchModelsListHandler,
+                                        disabled: fetchingModels,
+                                        className: "px-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 whitespace-nowrap"
+                                    }, fetchingModels ? '获取中...' : '获取列表')
+                                )
+                            )
+                        ),
+                        React.createElement('div', {
+                            className: "p-4 bg-gray-950 border-t border-gray-800 flex justify-between"
+                        },
+                            React.createElement('button', {
+                                onClick: () => {
+                                    if (confirm('确定要清除所有本地存档和API设置吗？此操作不可恢复。')) {
+                                        clearAllSaves();
+                                        setApiConfig(defaultApiConfig);
+                                        setAvailableModels([]);
+                                        hasSaveData.current = false;
+                                        alert('已清除所有本地数据。');
+                                    }
+                                },
+                                className: "px-4 py-2 bg-red-900/50 hover:bg-red-800 text-red-300 font-bold rounded-lg transition-colors text-sm border border-red-700/50"
+                            }, '清除所有本地数据'),
+                            React.createElement('button', {
+                                onClick: () => setShowSettings(false),
+                                className: "px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition-colors"
+                            }, '完成')
+                        )
+                    )
+                ),
+
+                React.createElement('div', { className: "max-w-2xl mx-auto p-4 md:p-6" },
+
+                    // ================= Setup Screen 1: Worldview =================
+                    gameState === 'setup_world' && React.createElement('div', {
+                            className: "animate-in fade-in slide-in-from-bottom-4 duration-500 relative"
+                        },
+                        React.createElement('div', { className: "absolute top-0 right-0 md:top-2 md:right-2 z-10" },
+                            React.createElement('button', {
+                                onClick: () => setShowSettings(true),
+                                className: "p-2.5 bg-gray-800/80 hover:bg-gray-700 border border-gray-700 rounded-full text-gray-400 hover:text-white transition-all shadow-lg backdrop-blur-sm group",
+                                title: "API设置"
+                            }, React.createElement(Icon.Settings, { size: 20,
+                                className: "group-hover:rotate-45 transition-transform duration-300" }))
+                        ),
+
+                        React.createElement('div', { className: "text-center mb-10 pt-12" },
+                            React.createElement('h1', {
+                                className: "text-5xl font-black bg-gradient-to-r from-purple-400 via-blue-500 to-emerald-400 bg-clip-text text-transparent mb-4"
+                            }, 'Life Restart AI'),
+                            React.createElement('p', { className: "text-gray-400" }, '大模型驱动的无限流人生重开模拟器')
+                        ),
+
+                        // 存档恢复提示
+                        hasSaveData.current && React.createElement('div', {
+                                className: "mb-6 p-5 bg-emerald-900/30 border border-emerald-600/50 rounded-2xl text-center animate-in fade-in"
+                            },
+                            React.createElement('div', {
+                                className: "flex items-center justify-center gap-2 text-emerald-400 font-bold mb-3"
+                            }, React.createElement(Icon.Save, { size: 20 }), ' 检测到未完成的存档'),
+                            React.createElement('p', { className: "text-gray-300 text-sm mb-4" },
+                                '上次的游戏进度已保存，你可以继续上次的人生旅程。'),
+                            React.createElement('div', { className: "flex gap-3 justify-center" },
+                                React.createElement('button', {
+                                    onClick: () => {
+                                        if (loadSaveGame()) {
+                                            // 成功加载
+                                        } else {
+                                            alert('存档数据损坏，无法恢复。');
+                                            clearSaveData();
+                                        }
+                                    },
+                                    className: "px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/25 flex items-center gap-2"
+                                }, React.createElement(Icon.Play, { size: 16, fill: 'currentColor' }),
+                                    '继续上次游戏'),
+                                React.createElement('button', {
+                                    onClick: () => {
+                                        if (confirm('确定要删除存档并开始新游戏吗？')) {
+                                            clearSaveData();
+                                            hasSaveData.current = false;
+                                            // 强制重新渲染
+                                            setGameState('setup_world');
+                                        }
+                                    },
+                                    className: "px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold rounded-xl transition-all border border-gray-600"
+                                }, '忽略，开始新游戏')
+                            )
+                        ),
+
+                        React.createElement('div', {
+                            className: "bg-gray-900/60 backdrop-blur-sm border border-gray-800 p-8 rounded-3xl shadow-xl"
+                        },
+                            React.createElement('h2', {
+                                className: "text-xl font-bold mb-6 flex items-center gap-2 text-purple-300"
+                            }, React.createElement(Icon.Sparkles, { size: 20 }), ' 选择你要降生的世界'),
+                            React.createElement('input', {
+                                type: 'text',
+                                value: worldview,
+                                onChange: (e) => setWorldview(e.target.value),
+                                placeholder: "例如：赛博朋克、修仙世界、中世纪领主...",
+                                className: "w-full bg-gray-950 border-2 border-gray-700 rounded-xl p-4 text-white focus:outline-none focus:border-purple-500 transition-all mb-4 text-lg"
+                            }),
+                            React.createElement('textarea', {
+                                value: worldDetails,
+                                onChange: (e) => setWorldDetails(e.target.value),
+                                placeholder: "深度自定义（可选）：在这里输入你想强加给世界的设定、主角的隐藏身世、金手指系统等...",
+                                className: "w-full h-24 bg-gray-950 border-2 border-gray-700 rounded-xl p-4 text-white focus:outline-none focus:border-purple-500 transition-all mb-4 text-sm resize-none"
+                            }),
+                            React.createElement('div', { className: "flex flex-wrap gap-2 mb-8" },
+                                presets.map(p =>
+                                    React.createElement('button', {
+                                        key: p,
+                                        onClick: () => setWorldview(p),
+                                        className: `px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+                                            worldview === p
+                                                ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/30'
+                                                : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700'
+                                        }`
+                                    }, p)
+                                )
+                            ),
+                            React.createElement('button', {
+                                onClick: handleDrawTalents,
+                                disabled: loading,
+                                className: "w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold text-lg transition-all shadow-lg shadow-purple-500/25 flex justify-center items-center gap-2 disabled:opacity-50"
+                            },
+                                loading ? React.createElement(Icon.Star, { className: "animate-spin" }) : React
+                                .createElement(Icon.Dices, null),
+                                loading ? "跨界抽取天赋中..." : "抽取初始天赋"
+                            )
+                        )
+                    ),
+                        pastRecords.length > 0 && React.createElement('div', {
+                            className: "bg-gray-900/60 backdrop-blur-sm border border-gray-800 p-8 rounded-3xl shadow-xl"
+                        },
+                            React.createElement('h2', {
+                                className: "text-xl font-bold mb-6 flex items-center gap-2 text-amber-300"
+                            }, React.createElement(Icon.ScrollText, { size: 20 }), ' 往世回顾'),
+                            React.createElement('div', { className: "space-y-3" },
+                                pastRecords.map((rec, idx) =>
+                                    React.createElement('div', {
+                                        key: rec.id,
+                                        onClick: () => { setReviewRecord(rec);
+                                            setShowLifeReview(true); },
+                                        className: "flex items-center justify-between bg-gray-800/50 hover:bg-gray-800 border border-gray-700/50 hover:border-purple-700/50 rounded-xl p-4 cursor-pointer transition-all group"
+                                    },
+                                        React.createElement('div', { className: "flex items-center gap-3 min-w-0" },
+                                            React.createElement('div', {
+                                                className: `w-10 h-10 rounded-lg flex items-center justify-center font-black text-sm shrink-0 ${(rec.epilogue.score ?? 0) >= 80 ? 'bg-amber-900/50 text-amber-400' : (rec.epilogue.score ?? 0) >= 60 ? 'bg-purple-900/50 text-purple-400' : 'bg-red-900/50 text-red-400'}`
+                                            }, rec.epilogue.score ?? 0),
+                                            React.createElement('div', { className: "min-w-0" },
+                                                React.createElement('div', {
+                                                    className: "font-bold text-white group-hover:text-purple-300 transition-colors truncate"
+                                                }, `【${rec.epilogue.title}】`),
+                                                React.createElement('div', {
+                                                    className: "text-xs text-gray-500 mt-0.5"
+                                                }, `${rec.worldview} · ${rec.gender} · ${rec.createdAt}`)
+                                            )
+                                        ),
+                                        React.createElement(Icon.ChevronRight, {
+                                            size: 18,
+                                            className: "text-gray-600 group-hover:text-purple-400 transition-colors shrink-0"
+                                        })
+                                    )
+                                )
+                            ),
+                            React.createElement('button', {
+                                onClick: () => {
+                                    if (confirm('确定清空所有往世回顾记录吗？')) {
+                                        setPastRecords([]);
+                                        clearStorage(STORAGE_KEYS.PAST_RECORDS);
+                                    }
+                                },
+                                className: "mt-4 text-xs text-gray-600 hover:text-red-400 transition-colors"
+                            }, '清空历史记录')
+                        ),
+
+                    // ================= Setup Screen 2: Talents & Stats =================
+                    gameState === 'setup_talents' && React.createElement('div', {
+                            className: "animate-in fade-in slide-in-from-bottom-4 duration-500"
+                        },
+                        React.createElement('div', { className: "mb-6" },
+                            React.createElement('h2', {
+                                className: "text-2xl font-bold mb-2 flex items-center gap-2 text-blue-300"
+                            }, React.createElement(Icon.Star, { size: 24 }), ' 十连抽天赋 (选3)'),
+                            React.createElement('p', { className: "text-gray-400 text-sm" }, '已选: ',
+                                React.createElement('span', { className: "text-white font-bold" },
+                                    `${selectedTalents.length}/3`))
+                        ),
+
+                        React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-2 gap-3 mb-8" },
+                            availableTalents.map((t, idx) => {
+                                const isSelected = selectedTalents.find(st => st.name === t.name);
+                                const rarityStyle = rarityColors[t.rarity] || rarityColors["普通"];
+                                return React.createElement('div', {
+                                    key: idx,
+                                    onClick: () => toggleTalent(t),
+                                    className: `p-3 rounded-xl border-2 cursor-pointer transition-all relative overflow-hidden flex flex-col justify-center
+                                        ${isSelected ? 'ring-2 ring-white scale-[1.02] shadow-xl' : 'opacity-80 hover:opacity-100 hover:scale-[1.01]'}
+                                        ${rarityStyle}`
+                                },
+                                    isSelected && React.createElement('div', {
+                                        className: "absolute top-2 right-2 text-white bg-black/50 rounded-full p-0.5"
+                                    }, React.createElement(Icon.Check, { size: 14 })),
+                                    React.createElement('div', { className: "font-bold text-lg mb-1" }, t.name),
+                                    React.createElement('div', { className: "text-xs opacity-90 leading-tight" },
+                                        t.description)
+                                );
+                            })
+                        ),
+
+                        React.createElement('div', {
+                            className: "bg-gray-900/60 backdrop-blur-sm border border-gray-800 p-6 rounded-2xl shadow-xl mb-8"
+                        },
+                            React.createElement('div', { className: "flex justify-between items-center mb-6" },
+                                React.createElement('h2', {
+                                    className: "text-lg font-bold flex items-center gap-2 text-blue-300"
+                                }, React.createElement(Icon.Heart, { size: 18 }), ' 分配初始属性'),
+                                React.createElement('div', {
+                                    className: "text-sm font-medium bg-gray-800 px-3 py-1 rounded-full border border-gray-700"
+                                }, '可用点数: ',
+                                    React.createElement('span', {
+                                        className: availablePoints > 0 ?
+                                            "text-purple-400 font-bold" : "text-gray-500"
+                                    }, availablePoints))
+                            ),
+                            React.createElement('div', {
+                                className: "flex items-center justify-between bg-gray-800/80 p-3 rounded-xl border border-gray-700/50 mb-4"
+                            },
+                                React.createElement('span', { className: "font-medium text-gray-200 ml-2" },
+                                    '角色性别'),
+                                React.createElement('div', { className: "flex gap-2" },
+                                    ['男', '女', '随机'].map(g =>
+                                        React.createElement('button', {
+                                            key: g,
+                                            onClick: () => setGender(g),
+                                            className: `px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${gender === g ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20' : 'bg-gray-900 text-gray-400 border border-gray-700 hover:bg-gray-800'}`
+                                        }, g)
+                                    )
+                                )
+                            ),
+                            React.createElement('div', { className: "space-y-3 mb-6" }, [
+                                { id: 'health', icon: Icon.Heart, label: "体质", color: "text-rose-400" },
+                                { id: 'intelligence', icon: Icon.Brain, label: "智力", color: "text-blue-400" },
+                                { id: 'appearance', icon: Icon.Sparkles, label: "颜值",
+                                color: "text-amber-400" },
+                                { id: 'wealth', icon: Icon.Coins, label: "家境", color: "text-yellow-500" },
+                                { id: 'happiness', icon: Icon.Smile, label: "快乐",
+                                color: "text-emerald-400" }
+                            ].map((stat) =>
+                                React.createElement('div', {
+                                    key: stat.id,
+                                    className: "flex items-center justify-between bg-gray-800/80 p-3 rounded-xl border border-gray-700/50"
+                                },
+                                    React.createElement('div', { className: "flex items-center gap-3" },
+                                        React.createElement('div', {
+                                            className: `p-2 rounded-lg bg-gray-900 ${stat.color}`
+                                        }, React.createElement(stat.icon, { size: 18 })),
+                                        React.createElement('span', {
+                                            className: "font-medium text-gray-200"
+                                        }, stat.label)
+                                    ),
+                                    React.createElement('div', {
+                                        className: "flex items-center gap-4 bg-gray-900 p-1 rounded-full border border-gray-800"
+                                    },
+                                        React.createElement('button', {
+                                            onClick: () => removePoint(stat.id),
+                                            disabled: stats[stat.id] === 0,
+                                            className: "w-7 h-7 rounded-full bg-gray-800 hover:bg-gray-700 disabled:opacity-30 flex items-center justify-center font-bold transition-colors"
+                                        }, '-'),
+                                        React.createElement('span', { className: "w-4 text-center font-bold" },
+                                            stats[stat.id]),
+                                        React.createElement('button', {
+                                            onClick: () => addPoint(stat.id),
+                                            disabled: availablePoints === 0 || stats[stat.id] ===
+                                                10,
+                                            className: "w-7 h-7 rounded-full bg-gray-800 hover:bg-gray-700 disabled:opacity-30 flex items-center justify-center font-bold transition-colors"
+                                        }, '+')
+                                    )
+                                )
+                            )),
+                            React.createElement('button', {
+                                onClick: randomizeStats,
+                                className: "w-full py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold transition-all border border-gray-700 flex justify-center items-center gap-2"
+                            }, React.createElement(Icon.Dices, { size: 16 }), ' 随机分配')
+                        ),
+
+                        React.createElement('button', {
+                            onClick: startGame,
+                            className: "w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-bold text-lg transition-all shadow-lg shadow-emerald-500/25 flex justify-center items-center gap-2"
+                        }, React.createElement(Icon.Play, { fill: "currentColor" }), ' 开始新人生')
+                    ),
+
+                    // ================= Gameplay Screen =================
+                    ['playing', 'choosing', 'dead'].includes(gameState) && React.createElement('div', {
+                            className: "animate-in fade-in duration-500"
+                        },
+                        // Sticky Header
+                        React.createElement('div', {
+                            className: "sticky top-0 z-20 bg-gray-950/90 backdrop-blur-xl pt-4 pb-4 border-b border-gray-800 shadow-2xl mb-6 -mx-4 px-4 md:-mx-6 md:px-6"
+                        },
+                            React.createElement('div', { className: "flex justify-between items-end mb-3" },
+                                React.createElement('div', null,
+                                    React.createElement('div', {
+                                        className: "text-xs text-purple-400 font-bold tracking-wider mb-1"
+                                    }, `【${worldview}】 ${gender !== '随机' ? gender : ''}`),
+                                    React.createElement('h2', { className: "text-2xl font-black" },
+                                        `第 ${age} 岁`)
+                                ),
+                                React.createElement('div', { className: "flex gap-2 flex-wrap" },
+                                    gameState === 'playing' && React.createElement(React.Fragment, null,
+                                        React.createElement('button', {
+                                            onClick: () => setIsAutoPlaying(!isAutoPlaying),
+                                            disabled: loading || gameState === 'choosing' ||
+                                                pendingChoice,
+                                            className: `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                                                isAutoPlaying ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700'
+                                            }`
+                                        }, isAutoPlaying ?
+                                            React.createElement(React.Fragment, null, React.createElement(
+                                                Icon.Pause, { size: 14, fill: "currentColor" }),
+                                                ' 暂停') :
+                                            React.createElement(React.Fragment, null, React.createElement(
+                                                Icon.Play, { size: 14, fill: "currentColor" }), ' 自动')
+                                        ),
+                                        React.createElement('button', {
+                                            onClick: handleNextYear,
+                                            disabled: loading || isAutoPlaying || gameState ===
+                                                'choosing' || pendingChoice,
+                                            className: "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-purple-600 hover:bg-purple-500 text-white transition-all disabled:opacity-50"
+                                        }, '下一年'),
+                                        React.createElement('button', {
+                                            onClick: handleEndLife,
+                                            disabled: loading,
+                                            className: "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-red-900/40 hover:bg-red-800/60 text-red-300 border border-red-700/50 transition-all",
+                                            title: "结束当前人生"
+                                        }, React.createElement(Icon.StopCircle, { size: 14 }),
+                                            '结束'),
+                                        React.createElement('button', {
+                                            onClick: handleQuickRestart,
+                                            disabled: loading,
+                                            className: "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-gray-800 hover:bg-gray-700 text-gray-400 border border-gray-700 transition-all",
+                                            title: "快速重开"
+                                        }, React.createElement(Icon.RotateCcw, { size: 14 }),
+                                            '重开')
+                                    )
+                                )
+                            ),
+                            // 天赋展示条
+                            React.createElement('div', { className: "flex flex-wrap gap-2 mb-3" },
+                                selectedTalents.map((t, idx) =>
+                                    React.createElement('div', { key: idx,
+                                        className: "group relative inline-flex" },
+                                        React.createElement('span', {
+                                            className: `text-[10px] px-2 py-0.5 rounded border whitespace-nowrap cursor-help ${rarityColors[t.rarity] || rarityColors["普通"]} shadow-sm`
+                                        }, t.name),
+                                        React.createElement('div', {
+                                            className: "opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2.5 bg-gray-900 text-gray-200 text-xs rounded-xl border border-gray-700 shadow-2xl z-50 text-center flex flex-col gap-1"
+                                        },
+                                            React.createElement('span', {
+                                                className: `font-bold ${rarityTextColors[t.rarity] || "text-gray-300"}`
+                                            }, t.name),
+                                            React.createElement('span', {
+                                                className: "text-gray-400 leading-relaxed"
+                                            }, t.description),
+                                            React.createElement('div', {
+                                                className: "absolute top-full left-1/2 -translate-x-1/2 -mt-px border-[6px] border-transparent border-t-gray-700"
+                                            })
+                                        )
+                                    )
+                                )
+                            ),
+                            React.createElement('div', { className: "grid grid-cols-5 gap-2" },
+                                React.createElement(StatBox, { icon: React.createElement(Icon.Heart, { size: 14 }),
+                                    label: "体质", value: stats.health, colorClass: "text-rose-400" }),
+                                React.createElement(StatBox, { icon: React.createElement(Icon.Brain, { size: 14 }),
+                                    label: "智力", value: stats.intelligence, colorClass: "text-blue-400" }),
+                                React.createElement(StatBox, { icon: React.createElement(Icon.Sparkles, { size: 14 }),
+                                    label: "颜值", value: stats.appearance,
+                                colorClass: "text-amber-400" }),
+                                React.createElement(StatBox, { icon: React.createElement(Icon.Coins, { size: 14 }),
+                                    label: "家境", value: stats.wealth, colorClass: "text-yellow-500" }),
+                                React.createElement(StatBox, { icon: React.createElement(Icon.Smile, { size: 14 }),
+                                    label: "快乐", value: stats.happiness,
+                                colorClass: "text-emerald-400" })
+                            )
+                        ),
+
+                        errorMsg && React.createElement('div', {
+                            className: "mb-4 p-3 bg-red-900/30 border border-red-500/50 rounded-lg text-red-200 text-sm flex items-center gap-2"
+                        }, React.createElement(Icon.AlertCircle, { size: 16, className: "text-red-400 shrink-0" }),
+                            ` ${errorMsg}`),
+
+                        // Event Log
+                        React.createElement('div', { className: "space-y-4" },
+                            history.map((item, idx) =>
+                                React.createElement('div', {
+                                    key: idx,
+                                    className: "flex gap-4 items-start group animate-in slide-in-from-left-4 fade-in duration-300"
+                                },
+                                    React.createElement('div', {
+                                        className: `w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center font-bold border-2 shadow-lg ${
+                                            item.isDead ? 'bg-gray-900 border-red-500/50 text-red-500' :
+                                            (item.event.includes('【抉择】') ? 'bg-amber-900/50 border-amber-500/50 text-amber-400' : 'bg-gray-800 border-purple-500/30 text-purple-300')
+                                        }`
+                                    }, item.age),
+                                    React.createElement('div', {
+                                        className: `flex-grow p-4 rounded-2xl border whitespace-pre-line ${
+                                            item.isDead ? 'bg-red-950/20 border-red-900/50' :
+                                            (item.event.includes('【抉择】') ? 'bg-amber-950/20 border-amber-800/50 shadow-inner shadow-amber-500/5' : 'bg-gray-900 border-gray-800')
+                                        }`
+                                    },
+                                        React.createElement('p', {
+                                            className: `text-base leading-relaxed ${item.isDead ? 'text-gray-300' : 'text-gray-200'}`
+                                        }, item.event),
+                                        item.statChanges && Object.values(item.statChanges).some(v => v !==
+                                            0) && !item.isDead && React.createElement('div', {
+                                            className: "flex flex-wrap gap-3 mt-3 pt-3 border-t border-gray-800/50"
+                                        }, renderStatChanges(item.statChanges))
+                                    )
+                                )
+                            ),
+
+                            // 命运抉择交互 UI
+                            gameState === 'choosing' && choiceEvent && React.createElement('div', {
+                                    className: "flex gap-4 items-start animate-in slide-in-from-bottom-8 fade-in duration-500 mt-6"
+                                },
+                                React.createElement('div', {
+                                    className: "w-12 h-12 rounded-full bg-amber-900 border-2 border-amber-500 text-amber-300 flex-shrink-0 flex items-center justify-center font-bold shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                                }, age),
+                                React.createElement('div', {
+                                    className: "flex-grow p-5 rounded-2xl bg-gradient-to-b from-amber-950/40 to-gray-900 border border-amber-700/50 shadow-xl overflow-hidden"
+                                },
+                                    React.createElement('div', {
+                                        className: "flex items-center gap-2 text-amber-400 font-bold mb-2"
+                                    }, React.createElement(Icon.Star, { size: 16, fill: "currentColor" }),
+                                        ' 命运抉择'),
+                                    React.createElement('p', {
+                                        className: "text-gray-100 text-lg leading-relaxed mb-6 font-serif"
+                                    }, choiceEvent.context),
+                                    React.createElement('div', {
+                                        className: `transition-all duration-300 ${pendingChoice ? 'opacity-30 blur-[2px] pointer-events-none' : ''}`
+                                    },
+                                        React.createElement('div', { className: "space-y-3 mb-4" },
+                                            choiceEvent.choices.map((choice, idx) =>
+                                                React.createElement('button', {
+                                                    key: idx,
+                                                    onClick: () => setPendingChoice({ text: choice,
+                                                        isCustom: false }),
+                                                    disabled: loading,
+                                                    className: "w-full text-left p-4 rounded-xl bg-gray-800/80 hover:bg-gray-700 border border-gray-700 hover:border-amber-500/50 transition-all text-gray-200 flex items-center justify-between group disabled:opacity-50"
+                                                },
+                                                    React.createElement('span', null, choice),
+                                                    React.createElement(Icon.ChevronRight, { size: 18,
+                                                        className: "text-gray-500 group-hover:text-amber-400 transition-colors" })
+                                                )
+                                            )
+                                        ),
+                                        React.createElement('div', {
+                                            className: "relative mt-6 pt-6 border-t border-gray-800"
+                                        },
+                                            React.createElement('div', {
+                                                className: "absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-900 px-3 text-xs text-gray-500"
+                                            }, '或者自行决定'),
+                                            React.createElement('div', { className: "flex gap-2" },
+                                                React.createElement('input', {
+                                                    type: 'text',
+                                                    value: customInput,
+                                                    onChange: (e) => setCustomInput(e.target
+                                                        .value),
+                                                    placeholder: "输入你想做的事...",
+                                                    disabled: loading,
+                                                    className: "flex-grow bg-gray-950 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                                                }),
+                                                React.createElement('button', {
+                                                    onClick: () => setPendingChoice({ text: customInput,
+                                                        isCustom: true }),
+                                                    disabled: !customInput.trim() || loading,
+                                                    className: "px-4 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-bold disabled:opacity-50 transition-colors flex items-center gap-1"
+                                                }, React.createElement(Icon.PenTool, { size: 14 }), ' 执行')
+                                            )
+                                        )
+                                    ),
+                                    pendingChoice && React.createElement('div', {
+                                        className: "mt-4 bg-gray-900 border border-amber-600/60 p-5 rounded-xl shadow-[0_0_20px_rgba(217,119,6,0.15)] animate-in slide-in-from-top-2 fade-in duration-300 relative z-10"
+                                    },
+                                        React.createElement('h3', {
+                                            className: "text-lg font-bold text-amber-400 mb-2 flex items-center gap-2"
+                                        }, React.createElement(Icon.AlertCircle, { size: 18 }),
+                                            ' 确认此项决断？落子无悔'),
+                                        React.createElement('p', {
+                                            className: "font-bold text-white text-base mb-6 py-3 px-4 bg-gray-950 rounded-lg border border-gray-800 shadow-inner"
+                                        }, `"${pendingChoice.text}"`),
+                                        React.createElement('div', { className: "flex gap-3" },
+                                            React.createElement('button', {
+                                                onClick: () => setPendingChoice(null),
+                                                className: "flex-[1] py-2.5 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 font-bold transition-colors"
+                                            }, '返回修改'),
+                                            React.createElement('button', {
+                                                onClick: () => { handleMakeChoice(pendingChoice.text,
+                                                        pendingChoice.isCustom); },
+                                                className: "flex-[2] py-2.5 rounded-lg bg-amber-600 text-white hover:bg-amber-500 font-bold transition-colors shadow-lg shadow-amber-600/20"
+                                            }, '就是这样')
+                                        )
+                                    )
+                                )
+                            ),
+
+                            loading && React.createElement('div', {
+                                className: "flex gap-4 items-start animate-pulse opacity-70 mt-4"
+                            },
+                                React.createElement('div', {
+                                    className: "w-12 h-12 rounded-full bg-gray-800 flex-shrink-0 border-2 border-gray-700 flex items-center justify-center"
+                                }, React.createElement(Icon.Star, { size: 16,
+                                    className: "text-gray-500 animate-spin" })),
+                                React.createElement('div', {
+                                    className: "flex-grow p-4 rounded-2xl bg-gray-900 border border-gray-800 space-y-3"
+                                },
+                                    React.createElement('div', { className: "text-xs text-purple-400 mb-2" },
+                                        loadingMsg),
+                                    React.createElement('div', {
+                                        className: "h-3 bg-gray-800 rounded w-5/6"
+                                    }),
+                                    React.createElement('div', {
+                                        className: "h-3 bg-gray-800 rounded w-3/4"
+                                    })
+                                )
+                            ),
+
+                            React.createElement('div', { ref: messagesEndRef, className: "h-4" })
+                        ),
+
+                        // Game Over Summary
+                        gameState === 'dead' && React.createElement('div', {
+                                className: "mt-8 mb-12 animate-in zoom-in-95 fade-in duration-700 flex flex-col gap-6"
+                            },
+                            React.createElement('div', {
+                                className: "bg-gradient-to-b from-red-950/40 to-gray-900 border border-red-900/50 p-8 rounded-3xl text-center shadow-2xl relative overflow-hidden"
+                            },
+                                React.createElement('div', {
+                                    className: "absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent opacity-50"
+                                }),
+                                React.createElement(Icon.Skull, { size: 56,
+                                    className: "mx-auto text-red-500/80 mb-4" }),
+                                React.createElement('h2', {
+                                    className: "text-3xl font-black text-red-400 mb-2 tracking-widest"
+                                }, '人生终结'),
+                                React.createElement('p', { className: "text-gray-400 font-medium mb-6" },
+                                    '享年 ',
+                                    React.createElement('span', { className: "text-2xl text-white mx-1" },
+                                        history[history.length - 1]?.age || 0),
+                                    ' 岁'),
+                                React.createElement('div', {
+                                    className: "bg-black/40 p-6 rounded-2xl border border-gray-800"
+                                },
+                                    React.createElement('p', {
+                                        className: "text-lg text-gray-300 font-serif italic leading-relaxed"
+                                    }, `"${history[history.length - 1]?.deathReason || '悄无声息地离开了这个世界'}"`)
+                                )
+                            ),
+                            epilogueLoading && React.createElement('div', {
+                                className: "p-8 rounded-3xl border border-purple-900/50 bg-gray-900 text-center animate-pulse flex flex-col items-center"
+                            },
+                                React.createElement(Icon.ScrollText, { size: 32,
+                                    className: "text-purple-500 mb-3 animate-bounce" }),
+                                React.createElement('div', { className: "text-purple-400 font-bold mb-2" },
+                                    '正在铭刻墓志铭...'),
+                                React.createElement('div', { className: "text-sm text-gray-500" },
+                                    '命运的判官正在审视你的一生')
+                            ),
+                            epilogue && !epilogueLoading && React.createElement('div', {
+                                className: "bg-gradient-to-br from-gray-900 to-purple-950/30 border border-purple-800/50 p-8 rounded-3xl text-center shadow-[0_0_40px_rgba(168,85,247,0.1)] relative overflow-hidden animate-in slide-in-from-bottom-8 fade-in duration-700"
+                            },
+                                React.createElement(Icon.Award, { size: 120,
+                                    className: "absolute -right-6 -top-6 text-purple-500/10 rotate-12" }),
+                                React.createElement('div', {
+                                    className: "relative z-10 flex flex-col items-center"
+                                },
+                                    React.createElement('div', {
+                                        className: "text-sm font-bold text-purple-400 tracking-widest mb-2 flex items-center gap-2"
+                                    }, React.createElement(Icon.ScrollText, { size: 16 }),
+                                        ' 后日谈录'),
+                                    React.createElement('div', { className: "my-6 relative" },
+                                        React.createElement('svg', {
+                                            viewBox: "0 0 100 100",
+                                            className: "w-32 h-32 transform -rotate-90"
+                                        },
+                                            React.createElement('circle', { cx: "50", cy: "50", r: "45",
+                                                fill: "none", stroke: "currentColor",
+                                                strokeWidth: "8", className: "text-gray-800" }),
+                                            React.createElement('circle', {
+                                                cx: "50",
+                                                cy: "50",
+                                                r: "45",
+                                                fill: "none",
+                                                stroke: "url(#scoreGrad)",
+                                                strokeWidth: "8",
+                                                strokeDasharray: "283",
+                                                strokeDashoffset: 283 - (283 * epilogue
+                                                    .score) / 100,
+                                                className: "transition-all duration-1000 ease-out"
+                                            }),
+                                            React.createElement('defs', null,
+                                                React.createElement('linearGradient', { id: "scoreGrad",
+                                                    x1: "0%", y1: "0%", x2: "100%", y2: "0%" },
+                                                    React.createElement('stop', { offset: "0%",
+                                                        stopColor: epilogue.score >= 80 ?
+                                                            '#f59e0b' : epilogue.score >= 60 ?
+                                                            '#a855f7' : '#ef4444' }),
+                                                    React.createElement('stop', { offset: "100%",
+                                                        stopColor: epilogue.score >= 80 ?
+                                                            '#fbbf24' : epilogue.score >= 60 ?
+                                                            '#c084fc' : '#f87171' })
+                                                )
+                                            )
+                                        ),
+                                        React.createElement('div', {
+                                            className: "absolute inset-0 flex flex-col items-center justify-center"
+                                        },
+                                            React.createElement('span', {
+                                                className: "text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-400 leading-none"
+                                            }, epilogue.score),
+                                            React.createElement('span', {
+                                                className: "text-[10px] text-gray-500 font-bold mt-1"
+                                            }, '综合评价')
+                                        )
+                                    ),
+                                    React.createElement('div', { className: "flex gap-4 justify-center mb-4" },
+                                        [
+                                            { label: '戏剧性', value: epilogue.dramaScore, color: '#f59e0b' },
+                                            { label: '成就度', value: epilogue.achievementScore, color: '#a855f7' },
+                                            { label: '意义感', value: epilogue.meaningScore, color: '#3b82f6' }
+                                        ].map((item, idx) =>
+                                            React.createElement('div', { key: idx, className: "flex flex-col items-center" },
+                                                React.createElement('div', {
+                                                    className: "text-xl font-black",
+                                                    style: { color: item.color }
+                                                }, item.value),
+                                                React.createElement('span', {
+                                                    className: "text-[10px] text-gray-500"
+                                                }, item.label)
+                                            )
+                                        )
+                                    ),
+                                    React.createElement('div', {
+                                        className: "text-2xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-amber-300"
+                                    }, `【${epilogue.title}】`),
+                                    React.createElement('p', {
+                                        className: "text-gray-300 leading-relaxed font-serif text-sm px-4 bg-gray-950/50 py-5 rounded-xl border border-purple-900/30"
+                                    }, epilogue.summary),
+                                    React.createElement('button', {
+                                        onClick: () => { setReviewRecord(null);
+                                            setShowLifeReview(true); },
+                                        className: "mt-4 flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm font-bold transition-colors"
+                                    },
+                                        React.createElement(Icon.ScrollText, { size: 16 }),
+                                        '人生回顾'
+                                    )
+                                )
+                            ),
+                            React.createElement('div', { className: "flex gap-3 justify-center flex-wrap" },
+                                React.createElement('button', {
+                                    onClick: restartGame,
+                                    className: "flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white px-8 py-4 rounded-full font-bold transition-all shadow-lg hover:shadow-gray-700/50"
+                                }, React.createElement(Icon.RotateCcw, { size: 20 }), ' 再次转生'),
+                                React.createElement('button', {
+                                    onClick: () => {
+                                        clearSaveData();
+                                        hasSaveData.current = false;
+                                        restartGame();
+                                    },
+                                    className: "flex items-center justify-center gap-2 bg-gray-700/50 hover:bg-gray-600 border border-gray-600 text-gray-300 px-6 py-4 rounded-full font-bold transition-all"
+                                }, '清除存档并重开')
+                            )
+                        )
+                    )
+                )
+            );
+
+        }
+
+        // 渲染应用
+        const root = createRoot(document.getElementById('root'));
+        root.render(React.createElement(App));
+    </script>
+</body>
+</html>
